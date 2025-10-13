@@ -114,7 +114,6 @@ names(traits)
 # CHECK FOR STRANGE VALUES 
 ################################################################################
 
-names(traits_long)
 # reshape the data for plotting
 traits_long <- 
   traits %>% 
@@ -161,7 +160,7 @@ traits_long %>% group_by(Species, Trait_name) %>% summarise(max_value = max(Trai
 
 # Method 1: uses the IQR to find the outliers and removes them
 
-# find outliers using the 
+# find outliers using the is_outlier function
 cleaned_data <- traits_long %>%
   group_by(Trait_name, Species) %>% 
   mutate(is_outlier = Trait_value %in% boxplot.stats(Trait_value)$out) %>%
@@ -196,6 +195,7 @@ final <- traits_long %>%
   group_by(Trait_name, Species) %>% 
   mutate(is_outlier = Trait_value %in% boxplot.stats(Trait_value)$out) %>%
   ungroup()
+final
 write_csv(final, "results/Field_dry_trait_data_with_flags.csv")
 
 ################################################################################
