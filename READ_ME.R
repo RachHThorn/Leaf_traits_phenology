@@ -35,3 +35,14 @@
 # this script is a bit messy and shows how I got the variance decomposition for all 
 # species and different traits
 # needs looking through and tidying but produces variance decomp. plot
+
+
+
+################################################################################
+
+# other processing code
+
+# Get_daily_temp_GDD_models.R
+# This code processes the daily netcdf files from the HadUk data base online
+# the latest data is not collated and has to be tidied a bit which this code does
+# it exports the files into the data folder: Hadley_data - "all_sites_daily_rainfall_2025.csv" (and tasmax tasmin)
