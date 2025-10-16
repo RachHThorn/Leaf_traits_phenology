@@ -26,6 +26,11 @@ names(dat)
 rainfall_2025 <- read_csv("data/Hadley_data/all_sites_daily_rainfall_2025.csv")
 tasmax_2025 <- read_csv("data/Hadley_data/all_sites_daily_tasmax_2025.csv")
 tasmin_2025 <- read_csv("data/Hadley_data/all_sites_daily_tasmin_2025.csv")
+names(rainfall_2025)
+# single value for each date / site combination
+# make a master 
+rainfall_2025 %>% filter(site == "Ainsdale") %>% group_by(date, x, y) %>% 
+  summarise(rainfall = mean(rainfall, na.rm = TRUE))
 
 names(rainfall_2025)
 

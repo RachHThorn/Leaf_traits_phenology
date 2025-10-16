@@ -11,6 +11,8 @@ library(lubridate)
 # Load data
 temps <- read.csv("C:/Users/lucyg/OneDrive/Documents/NEW PROJECT (BES POSTER + MANUSCRIPT)/Datasets + spreadsheets/All climate data.csv")
 
+
+
 # Checking date format
 temps$date <- as.Date(temps$date, format = "%d/%m/%Y")
 
