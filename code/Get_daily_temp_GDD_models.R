@@ -148,11 +148,30 @@ hazelrigg %>%
   geom_line()+
   facet_wrap(~year, scales = "free")
 
-# this needs simplifying down as there are multiple 1km squares covered by our polygon
-
-# save csv
-
+# join the data from each of the sites
 all_rain <- rbind(wytham, ainsdale, hazelrigg)
+# see how many unique pixel locations we have for each site
+all_rain %>% 
+  mutate(location = paste0(x, "_", y)) %>%
+  group_by(site) %>%
+  summarise(n_distinct(location))
+# we have a lot of pixels for Ainsdale
+
+# summarise the data 
+all_rain <-
+  all_rain %>% 
+  mutate(location = paste0(x, "_", y)) %>% 
+  group_by(date, site) %>% 
+  summarise(rainfall = mean(rainfall, na.rm = TRUE))
+
+# visualise to make sure this looks ok
+all_rain %>% 
+  ggplot(aes(date, rainfall))+
+  geom_point()+
+  geom_line()+
+  facet_wrap( ~site, scales = "free")
+
+# save csv to file
 write_csv(all_rain,"data/Hadley_data/all_sites_daily_rainfall_2025.csv")
 
 ################################################################################
@@ -220,8 +239,31 @@ hazelrigg %>%
   ggplot(aes(date, tasmin))+
   geom_point()
 
+# join the data from each of the sites
 all_tasmin <- rbind(wytham, ainsdale, hazelrigg)
-write_csv(all_tasmin, "data/Hadley_data//all_sites_daily_tasmin_2025.csv")
+# see how many unique pixel locations we have for each site
+all_tasmin %>% 
+  mutate(location = paste0(x, "_", y)) %>%
+  group_by(site) %>%
+  summarise(n_distinct(location))
+# we have a lot of pixels for Ainsdale
+
+# summarise the data 
+all_tasmin <-
+  all_tasmin %>% 
+  mutate(location = paste0(x, "_", y)) %>% 
+  group_by(date, site) %>% 
+  summarise(tasmin = mean(tasmin, na.rm = TRUE))
+
+# visualise to make sure this looks ok
+all_tasmin %>% 
+  ggplot(aes(date, tasmin))+
+  geom_point()+
+  geom_line()+
+  facet_wrap( ~site, scales = "free")
+
+# save csv to file
+write_csv(all_tasmin,"data/Hadley_data/all_sites_daily_tasmin_2025.csv")
 
 ################################################################################
 # Process the daily tasmax data
@@ -285,8 +327,31 @@ hazelrigg %>%
   ggplot(aes(date, tasmax))+
   geom_point()
 
+# join the data from each of the sites
 all_tasmax <- rbind(wytham, ainsdale, hazelrigg)
-write_csv(all_tasmax, "data/Hadley_data/all_sites_daily_tasmax_2025.csv")
+# see how many unique pixel locations we have for each site
+all_tasmax %>% 
+  mutate(location = paste0(x, "_", y)) %>%
+  group_by(site) %>%
+  summarise(n_distinct(location))
+# we have a lot of pixels for Ainsdale
+
+# summarise the data 
+all_tasmax <-
+  all_tasmax %>% 
+  mutate(location = paste0(x, "_", y)) %>% 
+  group_by(date, site) %>% 
+  summarise(tasmax = mean(tasmax, na.rm = TRUE))
+
+# visualise to make sure this looks ok
+all_tasmax %>% 
+  ggplot(aes(date, tasmax))+
+  geom_point()+
+  geom_line()+
+  facet_wrap( ~site, scales = "free")
+
+# save csv to file
+write_csv(all_tasmax,"data/Hadley_data/all_sites_daily_tasmax_2025.csv")
 
 ################################################################################
 # Process the monthly sun data
@@ -311,17 +376,24 @@ sun %>%
   geom_point()+
   facet_wrap(~year)
 
-
-
 ################################################################################
 
 # bind rainfall and temperature variables into one tidy df for the period 2000-2023
 
 all <- 
-  rainfall %>% 
-  left_join(sun) %>%
-  left_join(tasmax) %>%
-  left_join(tasmin)
+  all_rain %>% 
+  left_join(all_tasmax) %>%
+  left_join(all_tasmin)
+
+# check this visually
+# visualise to make sure this looks ok
+all %>% 
+  pivot_longer(cols = c(rainfall:tasmin)) %>%
+  ggplot(aes(date, value))+
+  geom_point()+
+  geom_line()+
+  facet_grid( name~site, scales = "free")
+
 
 # export to raw data folder
-# write_csv(all, "results/Hadley_climate_data_monthly.csv")
+write_csv(all, "data/Hadley_data/Hadley_climate_data_daily_2025.csv")
