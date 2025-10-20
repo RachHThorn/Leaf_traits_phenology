@@ -36,8 +36,11 @@
 # species and different traits
 # needs looking through and tidying but produces variance decomp. plot
 
-# script x (Lucy)
-# 
+# script 7 (Lucy)
+# calculating the GDD
+#Script works but needs double checking to make sure it is producing it right 
+# Produces a figure with all three sites cumulative GDD on one plot 
+# Need to implement this into figure with precipitation data too 
 
 
 
