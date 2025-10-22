@@ -1,22 +1,16 @@
-print("This file was created within RStudio")
-
-print("And now it lives on GitHub")
-
-#Plotting GDD for all three sites
-# Combined GDD calculation and plotting for Wytham and Hazelrigg
-
+#Plotting cumulative GDD for all three sites
+rm(list=ls())
 library(tidyverse)
 library(lubridate)
 
 # Load data
-temps <- read.csv("C:/Users/lucyg/OneDrive/Documents/NEW PROJECT (BES POSTER + MANUSCRIPT)/Datasets + spreadsheets/All climate data.csv")
+url <- "https://raw.githubusercontent.com/RachHThorn/Leaf_traits_phenology/refs/heads/main/data/Hadley_data/Hadley_climate_data_daily_2025.csv"
+temps <- read.csv(url)
 
+#Making sure the date is in the correct format 
+temps$date <- as.Date(temps_gdd$date, tryFormats = c("%Y-%m-%d", "%d/%m/%Y"))
 
-
-# Checking date format
-temps$date <- as.Date(temps$date, format = "%d/%m/%Y")
-
-# Defining base and cutoff temperatures
+# Defining the base and cutoff temperatures
 Tbase <- 4
 tasmax_cutoff <- 30
 tasmin_cutoff <- Tbase
@@ -34,17 +28,24 @@ temps_gdd <- temps %>%
   mutate(cumGDD = cumsum(GDD)) %>%
   ungroup()
 
+#Making sure the date is in the correct format 
+temps_gdd$date <- as.Date(temps_gdd$date, tryFormats = c("%Y-%m-%d", "%d/%m/%Y"))
+
 # Exporting site specific GDD results 
 temps_gdd %>%
   filter(site == "Wytham") %>%
-  write.csv("C:/Users/lucyg/OneDrive/Documents/NEW PROJECT (BES POSTER + MANUSCRIPT)/Datasets + spreadsheets/GDD_Wytham_results.csv", row.names = FALSE)
+  write_csv("results/GDD_Wytham_results.csv")
 
 temps_gdd %>%
   filter(site == "Hazelrigg") %>%
-  write.csv("C:/Users/lucyg/OneDrive/Documents/NEW PROJECT (BES POSTER + MANUSCRIPT)/Datasets + spreadsheets/GDD_Hazelrigg_results.csv", row.names = FALSE)
+  write_csv("results/GDD_Hazelrigg_results.csv")
 
-# Plotting
-# 1. Daily GDD for both sites
+temps_gdd %>%
+  filter(site == "Ainsdale") %>%
+  write_csv("results/GDD_Ainsdale_results.csv")
+
+
+#Plotting the daily GDD for the sites on one plot 
 
 ggplot(temps_gdd, aes(x = date, y = GDD, fill = site)) +
   geom_col(position = "dodge", alpha = 0.7) +
@@ -55,15 +56,27 @@ ggplot(temps_gdd, aes(x = date, y = GDD, fill = site)) +
   ) +
   theme_minimal(base_size = 13)
 
-# 2. Cumulative GDD for both sites on one graph
-ggplot(temps_gdd, aes(x = date, y = cumGDD, color = site)) +
-  geom_line(linewidth = 0.7) +
+ggsave("results/S7_daily_gdd_all_sites_plot.png", plot = ggplot, width = 8, height = 6, dpi = 300)
+
+
+#plotting the cumulative GDD for all three sites on one plot
+ggplot(temps_gdd, aes(x = date, y = cumGDD, color = site, group = site)) +
+  geom_line(linewidth = 0.8) +
   labs(
     x = "Date",
     y = "Cumulative GDD (°C·days)",
     color = ""
   ) +
-  theme_minimal(base_size = 13) +
+  scale_x_date(
+    date_breaks = "1 month",       
+    date_labels = "%b"            
+  ) +
+  theme_bw(base_size = 13) +       
   theme(
-    legend.position = "top"
+    legend.position = "top",
+    panel.grid.major = element_line(color = "grey85", linewidth = 0.4),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1) 
   )
+
+ggsave("results/S7_cumulative_ GDD_all_sites_plot.png", plot = ggplot, width = 8, height = 6, dpi = 300)
