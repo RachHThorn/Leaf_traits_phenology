@@ -41,7 +41,7 @@
 #Script works but needs double checking to make sure it is producing it right 
 # Produces a figure with all three sites cumulative GDD on one plot 
 # Need to implement this into figure with precipitation data too 
-
+# When running the code the figures produce fine but not properly uploading to the git - need to figure this out 
 
 
 ################################################################################
