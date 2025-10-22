@@ -43,7 +43,10 @@
 # Need to implement this into figure with precipitation data too 
 # When running the code the figures produce fine but not properly uploading to the git - need to figure this out 
 
-
+#script 8 (Lucy)
+#code for making figure 1 of the poster
+#this is my original code so need to continue changing it with the new spreadhseets and data 
+#so far only produces a plot looking at this years data 
 ################################################################################
 
 # other processing code
