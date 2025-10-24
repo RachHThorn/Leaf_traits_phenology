@@ -45,8 +45,9 @@
 
 #script 8 (Lucy)
 #code for making figure 1 of the poster
-#this is my original code so need to continue changing it with the new spreadhseets and data 
-#so far only produces a plot looking at this years data 
+#Makes very rough preliminary grpahs 
+#needs tidying up a bit to produce better graphs 
+#shows some initial trends 
 ################################################################################
 
 # other processing code
