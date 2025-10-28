@@ -8,7 +8,7 @@ url <- "https://raw.githubusercontent.com/RachHThorn/Leaf_traits_phenology/refs/
 temps <- read.csv(url)
 
 #Making sure the date is in the correct format 
-temps$date <- as.Date(temps_gdd$date, tryFormats = c("%Y-%m-%d", "%d/%m/%Y"))
+temps$date <- as.Date(temps$date, tryFormats = c("%Y-%m-%d", "%d/%m/%Y"))
 
 # Defining the base and cutoff temperatures
 Tbase <- 4
