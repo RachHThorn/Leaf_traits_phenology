@@ -1,6 +1,7 @@
 # R Thornley
 # 16/09/2025
 # Look at the distribution of data points from TRY and our data for the key dry leaf traits
+rm(list=ls())
 
 library(tidyverse) 
 
@@ -15,7 +16,7 @@ field <- read_csv("results/Field_dry_trait_data_with_flags.csv")
 ################################################################################
 
 # load in the TRY trait data
-TRY_traits <- read_csv("data/selected_European_data_TRY_our_species.csv")
+TRY_traits <- read_csv("data/TRY_data/selected_European_data_TRY_our_species.csv")
 names(TRY_traits)
 # check units
 # variable = UnitName
@@ -74,12 +75,150 @@ TRY_traits %>%
 unique(field$is_outlier)
 TRY_traits$is_outlier <- FALSE
 
+names(TRY_traits)
+names(field)
+common_cols <- intersect(names(TRY_traits), names(field))
+
+TRY_traits <- TRY_traits[, common_cols]
+field <- field[, common_cols]
+
+
 both <- rbind(TRY_traits, field)
 
 TRY_traits %>% group_by(Species) %>% tally()
 
-# visualise the data
-both %>% 
-  ggplot(aes(Trait_value, fill = data_set)) + geom_density() + 
-  facet_wrap(~ Trait_name, scale = "free_x")
+# Define a color palette
+my_colors <- c("TRY" = "#00BFC4", "field" = "#F8766D")
 
+#################################################################################################
+# L GOWLING
+# 02/11/2025
+#PLOTTING LMA
+###################################################################################################
+
+# LMA
+plot_LMA <- both %>%
+  filter(Trait_name == "LMA") %>%
+  ggplot(aes(x = Trait_value, fill = data_set)) +
+  geom_density(alpha = 0.4) +
+  scale_fill_manual(name = "Dataset",                  
+                    values = c("TRY" = "#00BFC4", "field" = "#F8766D"),  
+                    labels = c("TRY" = "TRY", "field" = "Field")) +
+  labs(
+    title = "",
+    x = "LMA (mg cm⁻²)",
+    y = "Density",
+    fill = "Dataset"
+  ) +
+  theme_minimal(base_size = 14)
+
+plot_LMA
+
+########################################################################################
+#ORIGINAL LMA PLOT SKEWED LEFT SO TRYING TWO DIFFERENT APPROACHES
+#1. Using coord_cartesin 
+#2. log transforming the plot 
+###########################################################################################
+
+#1. 
+plot_LMA1 <- both %>%
+  filter(Trait_name == "LMA") %>%
+  ggplot(aes(x = Trait_value, fill = data_set)) +
+  geom_density(alpha = 0.4, adjust = 1.5) +
+  scale_fill_manual(
+    name = "Dataset",
+    values = c("TRY" = "#00BFC4", "field" = "#F8766D"),
+    labels = c("TRY" = "TRY", "field" = "Field")
+  ) +
+  coord_cartesian(xlim = c(0, 100)) +  # adjust to the main LMA range
+  labs(
+    title = "",
+    x = "LMA (mg cm⁻²)",
+    y = "Density"
+  ) +
+  theme_minimal(base_size = 14)
+
+plot_LMA1
+
+#2. 
+plot_LMA2 <- both %>%
+  filter(Trait_name == "LMA") %>%
+  ggplot(aes(x = Trait_value, fill = data_set)) +
+  geom_density(alpha = 0.4, adjust = 1.5) +   # smooth the curve
+  scale_fill_manual(
+    name = "Dataset",
+    values = c("TRY" = "#00BFC4", "field" = "#F8766D"),
+    labels = c("TRY" = "TRY", "field" = "Field")
+  ) +
+  scale_x_log10() +  # log-transform x-axis
+  labs(
+    title = "",
+    x = "LMA (mg cm⁻², log scale)",
+    y = "Density"
+  ) +
+  theme_minimal(base_size = 14)
+
+plot_LMA2
+
+##########################################################################################################
+#1.PLOTTING LDMC 
+#2. THEN USING COOR_CARTESIAN 
+#3.THEN LOG TRANSFORMING
+#################################################################################################
+#1.
+plot_LDMC <- both %>%
+  filter(Trait_name == "LDMC") %>%
+  ggplot(aes(x = Trait_value, fill = data_set)) +
+  geom_density(alpha = 0.4) +
+  scale_fill_manual(name = "Dataset",
+                    values = c("TRY" = "#00BFC4", "field" = "#F8766D"),
+                    labels = c("TRY" = "TRY", "field" = "Field")) +
+  labs(
+    title = "LDMC distribution: TRY vs Field",
+    x = "LDMC (g/g)",
+    y = "Density",
+    fill = "Dataset"
+  ) +
+  theme_minimal(base_size = 14)
+
+plot_LDMC
+
+#2.
+plot_LDMC1 <- both %>%
+  filter(Trait_name == "LDMC") %>%
+  ggplot(aes(x = Trait_value, fill = data_set)) +
+  geom_density(alpha = 0.4, adjust = 2) +
+  scale_fill_manual(name = "Dataset",                  
+                    values = c("TRY" = "#00BFC4", "field" = "#F8766D"),  
+                    labels = c("TRY" = "TRY", "field" = "Field")) +
+  coord_cartesian(xlim = c(0, 1)) +  
+  labs(
+    title = "",
+    x = "LDMC (g/g)",
+    y = "Density",
+    fill = "Dataset"
+  ) +
+  theme_minimal(base_size = 14)
+
+plot_LDMC1
+
+#3.
+plot_LDMC2 <- both %>%
+  filter(Trait_name == "LDMC") %>%
+  ggplot(aes(x = Trait_value, fill = data_set)) +
+  geom_density(alpha = 0.4, adjust = 1.2) +      
+  scale_fill_manual(name = "Dataset",
+                    values = c("TRY" = "#00BFC4", "field" = "#F8766D"),
+                    labels = c("TRY" = "TRY", "field" = "Field")) +
+  scale_x_log10() +                             
+  labs(
+    title = "",
+    x = "LDMC (g/g, log scale)",
+    y = "Density",
+    fill = "Dataset"
+  ) +
+  theme_minimal(base_size = 14)
+
+plot_LDMC2
+
+###################################################################################################

@@ -29,6 +29,10 @@
 # script 3
 # I tried to compare the TRY and field trait data but it didn't work very well
 # this analysis needs work
+#LUCY - updated the code and managed to produce plots for LDMC and LMA  
+#so far only done plots of all the TRY data compared to all our species 
+#next step is to split by species and time 
+
 
 # script 4
 # variance partitioning
