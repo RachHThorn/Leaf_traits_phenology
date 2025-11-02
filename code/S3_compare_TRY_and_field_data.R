@@ -222,3 +222,41 @@ plot_LDMC2 <- both %>%
 plot_LDMC2
 
 ###################################################################################################
+#SEPERATING BY SPECIES 
+#########################################################################################################
+library(tidyverse)
+
+# Filter to only LMA and LDMC
+both_traits <- both %>% 
+  filter(Trait_name %in% c("LMA", "LDMC"))
+
+# Define color palette
+my_colors <- c("TRY" = "#00BFC4", "field" = "#F8766D")
+
+# Get list of species and traits
+species_list <- unique(both_traits$Species)
+trait_list <- unique(both_traits$Trait_name)
+
+# Loop through species and traits
+for(sp in species_list) {
+  for(tr in trait_list) {
+    
+    p <- both_traits %>%
+      filter(Species == sp, Trait_name == tr) %>%
+      ggplot(aes(x = Trait_value, fill = data_set)) +
+      geom_density(alpha = 0.4, adjust = 1.5) +
+      scale_fill_manual(values = my_colors,
+                        name = "Dataset",
+                        labels = c("TRY" = "TRY", "field" = "Field")) +
+      labs(
+        title = paste(sp),
+        x = tr,
+        y = "Density"
+      ) +
+      theme_minimal(base_size = 12)
+    
+    print(p)  # shows plot in RStudio
+    
+
+  }
+}
