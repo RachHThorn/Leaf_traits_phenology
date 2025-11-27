@@ -11,17 +11,17 @@ library(tidyverse)
 # check the data we have at the moment
 ################################################################################
 
-dat <- read_csv("data/Hadley_data/Hadley_climate_data_monthly_2000_2024.csv")
+dat <- read_csv("results/Hadley_climate_data_monthly_all_sites_2000_2024.csv")
 names(dat)
-dat$year
 unique(dat$date)
-# we don't have any 2025 climate data here
+unique(dat$site) # this is data for Wytham only at the moment
 
-names(dat)
+# we don't have any 2025 climate data here
 
 ################################################################################
 # Load new data for the available months for 2025
 # this has been processed by the script 'Get_daily_temp_GDD_models.R'
+# this is at daily resolution but 
 ################################################################################
 rainfall_2025 <- read_csv("data/Hadley_data/all_sites_daily_rainfall_2025.csv")
 tasmax_2025 <- read_csv("data/Hadley_data/all_sites_daily_tasmax_2025.csv")
@@ -29,12 +29,16 @@ tasmin_2025 <- read_csv("data/Hadley_data/all_sites_daily_tasmin_2025.csv")
 names(rainfall_2025)
 # single value for each date / site combination
 # make a master 
+names(rainfall_2025)
+rainfall_2025$date
 rainfall_2025 %>% filter(site == "Ainsdale") %>% group_by(date, x, y) %>% 
   summarise(rainfall = mean(rainfall, na.rm = TRUE))
 
 names(rainfall_2025)
 
 all_2025 <- rainfall_2025 %>% left_join(tasmin_2025) %>% left_join(tasmax_2025)
+
+write_csv(all_2025, "results/Hadley_climate_data_daily_all_sites_2025.csv")
 
 ###############################################################################
 
