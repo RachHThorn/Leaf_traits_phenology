@@ -20,10 +20,7 @@ library(tidyverse)
 # code
 ################################################################################
 
-
-# read in data
-file_path <- ("data/...")
-df <- readr::read_csv(file_path, show_col_types = FALSE) 
+# read in data (not sure where the )
 
 # transform into a matrix suitable for use in 
 wide <- df %>%

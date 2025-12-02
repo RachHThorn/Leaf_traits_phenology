@@ -10,7 +10,26 @@ library(purrr)
 library(scales)
 
 ################################################################################
-# RE models for the field trait data
+# INSTRUCTIONS
+################################################################################
+
+# 1) Load trait data
+# 2) Build a RE model for one trait and species to determine the method
+# here we decompose the variance within each trait and species by the following:
+# species (inter-specific variation),
+# sampling times within species (intra-specific variation across time)
+# individual variation within species (intra-specific variation at the individual level)
+# treatment variation within species (intra-specific variation across disturbance regimes)
+
+# 3) RUN the RE model for all the species and traits in the data set
+# 4) Examine why there are singular models
+# 5) For one species re-run code so that singular values are returned as zeros
+# 6) Generalise 5) for each species using robust code - to get 
+# 7) nice violin plot for the variance decomposition for each species
+# 8) Now build the models across all the species and try out different RE structures
+
+################################################################################
+# 1) Load the cleaned field trait data
 ################################################################################
 
 # load the trait dat
@@ -18,25 +37,20 @@ traits <- read_csv("results/Field_dry_trait_data_with_flags.csv")
 # filter out the outliers which are flagged from the old script
 traits <- traits %>% filter(is_outlier == FALSE)
 
-# here we want to decompose the variance by the following:
-# 1) species (inter-specific variation),
-# 2) sampling times within species (intra-specific variation across time)
-# 3) individual variation within species (intra-specific variation at the individual level)
-# 4) treatment variation within species (intra-specific variation across disturbance regimes)
-
 ################################################################################
-# PROCESS FOR ONE SPECIES AND TRAIT
+# 2) PROCESS RE models for the field trait data FOR ONE SPECIES AND TRAIT (TEST)
 ################################################################################
 
-# do for one species
+# look at the species and traits we have 
 unique(traits$Species) # CA
 unique(traits$Trait_name) # LMA, LDMC, LWC, EWT
 
 traits$Date
 traits$Time_point
 traits$Individual_nos
+# SIDE: if I try to add within individual variance I get a singular model within species
 
-# try for CA and LDMC
+# try for species CA and leaf trait LDMC
 LDMC <- traits %>% 
   filter(Species == "CA") %>% 
   filter(Trait_name == "LDMC") %>%
@@ -45,7 +59,6 @@ LDMC <- traits %>%
                    (1|Treatment),
                  data = .)
 
-# SIDE: if I try to add within individual variance I get a singular model within species
 
 vc_LDMC <- as.data.frame(VarCorr(LDMC)) |>
   dplyr::select(grp, vcov) |>
@@ -66,14 +79,13 @@ ggplot(vc_LDMC, aes(x = prop, y = trait, fill = grp)) +
 
 
 ################################################################################
-# PART 1: GENERALISE ACROSS ALL TRAITS WITHIN A SPECIES
+# 3) RUN the RE model for all the species and traits in the data set
 ################################################################################
 
 # data input
 traits <- read_csv("results/Field_dry_trait_data_with_flags.csv") 
 names(traits)
 traits <- traits %>% filter(is_outlier == FALSE)
-
 
 # inputs
 species_list <- unique(traits$Species)
@@ -124,12 +136,14 @@ ggplot(all_vc, aes(x = Trait_name, y = prop, fill = grp)) +
   facet_wrap(~ Species, scales = "free_x") +
   theme_minimal()
 
+# THERE ARE QUITE A FEW SNGULAR MODELS THAT NEED DEALING WITH
+
 ###############################################################################
-# PART 1: LOOK AT SINGULAR MODELS
+# 4) LOOK AT SINGULAR MODELS
 ##############################################################################
 
 # There are 14 singular models
-# filter the data for the singular models
+# filter the results from stage 3) for the singular models
 df_na <- all_vc %>% filter(if_any(everything(), is.na))
 df_na
 
@@ -162,7 +176,7 @@ traits %>%
 rePCA(mod)
 
 ################################################################################
-# PART 1: RUN CODE FOR SING MODELS: RETURN VAR COMPS OF ZERO: ONE SPECIES: ROBUST CODE
+# 5) RUN CODE FOR SING MODELS: RETURN VAR COMPS OF ZERO: ONE SPECIES: ROBUST CODE
 ################################################################################
 
 # data input
@@ -219,10 +233,10 @@ out <- vc_zeroed(
 out
 
 ####################################################################################
-# PART 1: GENERALISE ACROSS ALL TRAITS WITHIN A SPECIES FOR SING MODELS: ROBUST CODE
+# 6) GENERALISE 5) ACROSS ALL TRAITS WITHIN A SPECIES FOR SING MODELS: ROBUST CODE
 ####################################################################################
 
-# There are 14 singular models
+# There are 14 singular models produced from the last lot of code
 # filter the data for the singular models
 df_na <- all_vc %>% filter(if_any(everything(), is.na))
 df_na
@@ -230,7 +244,6 @@ df_na
 # Look at which models have singular fits
 species_list <- unique(df_na$Species)
 traits_list <- unique(df_na$Trait_name)
-
 
 # Check if I can run this for all models no matter if they are singular or not
 species_list <- unique(traits$Species)
@@ -261,23 +274,26 @@ ggplot(all_vc, aes(x = Trait_name, y = prop, fill = grp)) +
   facet_wrap(~ Species, scales = "free_x") +
   theme_minimal()
 
-# we still don't have any results for SR
+# save this for later
+# write_csv(all_vc, "results/var_com_ind_species.csv")
 
+# we still don't have any results for SR
+# have a look why this might be
 traits %>% 
   filter(Species == "SR" & Trait_name == "LMA") %>%
   ggplot(aes(Treatment, Trait_value))+
   geom_boxplot()+
   facet_wrap(~Time_point)
 
-# This is because it does not feature in any other plots other than control
-# we could take this out of the results for now
-
+# This is because it does not feature in any other plots other than control!!
+# we could take this out of the results for now but will need to think of a way 
+# to deal with this data at some point
 
 ###############################################################################
-# VARIANCE DECOMPOSITION FIGURE 1: VIOLINS WITH SPECIES DOTS
+# 7) SPECIES LEVEL VARIANCE DECOMPOSITION FIGURE 1: VIOLINS WITH SPECIES DOTS
 ################################################################################
-# NOTE: needs working on: replace dots with 
 
+# get rid of SR as we don't have this species in a disturbance plot (it's extinct)
 plot_dat <- all_vc %>% filter(!grp == "SR")
 plot_dat <- plot_dat %>%
   mutate(grp = recode(grp, "Treatment" = "Disturbance regime",
@@ -301,31 +317,93 @@ plot <- plot_dat %>%
 plot
 ggsave("figures/var_comp_figure_labelled.jpeg", plot, height = 7, width = 7)
 
+# NOTE: needs working on: we could replace dots with species specific symbols for example
+
 ################################################################################
-# VAR COMP FOR ALL SPECIES ACROSS ALL SITES: UNFINISHED CODE 
-# might do this for final paper
+# 8) VAR COMP FOR ALL SPECIES ACROSS ALL SITES
 ################################################################################
 
-# tidy the variance names for plotting
-vc_all <- vc_all %>% mutate(new_grp = case_when(grp == "Species:Individual" ~ "Within species",
-                                                grp == "Species:Treatment" ~ "Within species between treatments",
-                                                grp == "Species:Date" ~ "Within species between sampling times",
-                                                grp == "Species" ~ "Between species across time",
-                                                grp == "Residual" ~ "Unexplained variation"))
+# data input
+traits <- read_csv("results/Field_dry_trait_data_with_flags.csv") 
+names(traits)
+traits <- traits %>% filter(is_outlier == FALSE)
 
-# plot as stacked bar plot
-ggplot(vc_all, aes(x = trait, y = prop, fill = new_grp)) +
-  geom_col(position = "fill") +       # stacked to 100%
-  scale_y_continuous(labels = scales::percent) +
-  labs(x = "Trait", y = "Proportion of Variance",
-       title = "Variance Partitioning Across Traits",
-       fill = "Source of Variation") +
+# Build the random effects models for each trait 
+# across all species
+
+# RE structure 1
+# using treatment, site, sampling date, species as the REs
+var_str_1 <- traits %>% group_by(Trait_name) %>% nest() %>% 
+  mutate(models = map(data, ~ lmer(Trait_value ~ 1 + (1 | Time_point) + (1 | Treatment) + (1 | Site) + ( 1 | Species), 
+                                   data = .x)),
+         vars = map(models, ~ as.data.frame(VarCorr(.x)))) %>%
+  dplyr::select(Trait_name, vars) %>%
+  unnest(cols = c(vars)) %>%
+  mutate(new_grp = case_when(grp == "Species" ~ "Between species",
+                             grp == "Treatment" ~ "Between treatments",
+                             grp == "Site" ~ "Between sites",
+                             grp == "Time_point" ~ "Between sampling dates",
+                             grp == "Residual" ~ "Unexplained variation")) %>%
+  group_by(Trait_name) %>%
+  mutate(prop = vcov / sum(vcov, na.rm = TRUE)) %>%
+  ungroup()
+
+# visualise this as a bar plot
+ggplot(var_str_1, aes(x = Trait_name, y = prop, fill = new_grp)) +
+  geom_col(width = 0.7) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(x = "Trait", y = "Variance share", fill = "Component") +
   theme_minimal()
 
-ggsave("figures/variance_decomp_all_species.jpeg", plot, height = 5, width = 8)
+# RE structure 2
+# drop site (as it does nothing) - try testing treatment within species 
+# then species and time as the REs
+var_str_2 <- traits %>% group_by(Trait_name) %>% nest() %>% 
+  mutate(models = map(data, ~ lmer(Trait_value ~ 1 + ( 1 | Species) + (1 | Species:Treatment) + 
+                                     (1| Time_point), 
+                                   data = .x)),
+         vars = map(models, ~ as.data.frame(VarCorr(.x)))) %>%
+  dplyr::select(Trait_name, vars) %>%
+  unnest(cols = c(vars)) %>%
+  mutate(new_grp = case_when(grp == "Species" ~ "Between species",
+                             grp == "Species:Treatment" ~ "Treatments within species",
+                             grp == "Time_point" ~ "Between sampling dates",
+                             grp == "Residual" ~ "Leaf / sample level variation")) %>%
+  mutate(prop = vcov/sum(vcov))
+
+# visualise this as a bar plot
+ggplot(var_str_2, aes(x = Trait_name, y = prop, fill = new_grp)) +
+  geom_col(width = 0.7) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(x = "Trait", y = "Variance share", fill = "Component") +
+  theme_minimal()
+
+
+# RE structure 3
+# still treat
+var_str_2 <- traits %>% group_by(Trait_name) %>% nest() %>% 
+  mutate(models = map(data, ~ lmer(Trait_value ~ 1 + ( 1 | Species) + (1 | Species:Treatment) + 
+                                     (1| Time_point), 
+                                   data = .x)),
+         vars = map(models, ~ as.data.frame(VarCorr(.x)))) %>%
+  dplyr::select(Trait_name, vars) %>%
+  unnest(cols = c(vars)) %>%
+  mutate(new_grp = case_when(grp == "Species" ~ "Between species",
+                             grp == "Species:Treatment" ~ "Treatments within species",
+                             grp == "Time_point" ~ "Between sampling dates",
+                             grp == "Residual" ~ "Unexplained variation"))%>%
+  mutate(prop = vcov/sum(vcov))
+
+# visualise this as a bar plot
+ggplot(var_str_2, aes(x = Trait_name, y = prop, fill = grp)) +
+  geom_col(width = 0.7) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(x = "Trait", y = "Variance share", fill = "Component") +
+  theme_minimal()
+
 
 ################################################################################
-# VAR COMP FOR ALL 
+# VAR COMP FOR ALL : not sure what this code is doing at the moment
 #################################################################################
 
 # plot rough

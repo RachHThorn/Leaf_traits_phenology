@@ -1,7 +1,6 @@
 # Leaf Traits Phenology Project
-# Autumn / Winter 2025
+# Autumn / Winter 2025/2026
 # Rachael Thornley and Lucy Gowling
-
 
 # script 1
 # S1_check_tidy_trait_raw_data.R
@@ -33,30 +32,40 @@
 #so far only done plots of all the TRY data compared to all our species 
 #next step is to split by species and time 
 
-
 # script 4
 # variance partitioning
 # this script is a bit messy and shows how I got the variance decomposition for all 
 # species and different traits
 # needs looking through and tidying but produces variance decomp. plot
 
+# script 5
+# check tidy demo raw data
+# 
+
+# script 6
+# climate data HadUK
+
+
 # script 7 (Lucy)
 # calculating the GDD
-#Script works but needs double checking to make sure it is producing it right 
+# Script works but needs double checking to make sure it is producing it right 
 # Produces a figure with all three sites cumulative GDD on one plot 
 # Need to implement this into figure with precipitation data too 
 # When running the code the figures produce fine but not properly uploading to the git - need to figure this out 
 
 #script 8 (Lucy)
 #code for making figure 1 of the poster
-#Makes very rough preliminary grpahs 
+#Makes very rough preliminary graphs 
 #needs tidying up a bit to produce better graphs 
 #shows some initial trends 
+
+# script 9 (Lucy)
+
 ################################################################################
 
 # other processing code
 
 # Get_daily_temp_GDD_models.R
-# This code processes the daily netcdf files from the HadUk data base online
+# This code processes the daily netcdf files from the HadUK data base online
 # the latest data is not collated and has to be tidied a bit which this code does
 # it exports the files into the data folder: Hadley_data - "all_sites_daily_rainfall_2025.csv" (and tasmax tasmin)
