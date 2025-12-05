@@ -15,7 +15,11 @@ library(scales)
 ################################################################################
 
 # load the trait data
-traits <- read_csv("results/Field_dry_trait_data_with_flags.csv") 
+# traits <- read_csv("results/Field_dry_trait_data_with_flags.csv") 
+# I think the ddata below is actually better for modelling
+traits <- read_csv("results/Trait_data_for_var_modelling_evo_demos.csv") 
+names(traits)
+
 # filter out the outliers which are flagged from the old script
 traits <- traits %>% filter(is_outlier == FALSE)
 # make the data set small with only the variables and traits we need
@@ -30,7 +34,8 @@ traits <- traits %>%
 ################################################################################
 
 # all species 
-mod <- lmer(Trait_value ~ 1 + ( 1 | Species) + (1 | Species:Treatment) + (1| Time_point), data = traits)
+mod <- lmer(Trait_value ~ 1 + ( 1 | Species) + (1 | Species:Treatment) + 
+              (1| Time_point), data = traits)
 vc <- as.data.frame(VarCorr(mod))
 vc <- vc %>% 
   mutate(
@@ -129,39 +134,113 @@ ggsave("figures/BES_poster_Lucy/Site_level_var_decomp_no_labels.pdf", p2, height
 
 
 ################################################################################
-# now visualise in a similar way for the individual species models
+# plot individual species models: ordered by magnitude of variance in treatment
 ################################################################################
-
 
 all_sp <- read_csv("results/var_com_ind_species.csv")
 names(all_sp)
 # get rid of SR for now as it si only foudn in one treatment
-all_sp <- all_sp %>% filter(!Species == "SR")
+all_sp <- all_sp %>% filter(!Species == "SR") %>% filter(Trait_name == "LMA")
+
+# Get species levels ordered by Treatment prop
+species_levels <- all_sp %>%
+  filter(grp == "Treatment") %>%          # only Treatment rows
+  group_by(Species) %>%
+  summarise(order_val = mean(prop, na.rm = TRUE), .groups = "drop") %>%
+  arrange(desc(order_val)) %>%            # largest Treatment prop first
+  pull(Species)
+
+
+# Apply those levels to Species in the full dataset
+all_sp <- all_sp %>%
+  mutate(
+    grp = factor(grp, levels = c("Treatment", "Time_point", "Residual")),
+    Species = factor(Species, levels = species_levels))
+
+unique(all_sp$grp)
+
 
 p3 <- ggplot(all_sp, aes(x = Trait_name, y = prop, fill = grp)) +
   geom_col(width = 1) +
-  scale_y_continuous(labels = percent_format()) +
-  labs(x = "Trait", y = "Percent variance", fill = "Source of variance") +
+  facet_wrap(~Species, nrow = 1) +
   theme_classic() +
   theme(
-    axis.title = element_blank(),
-    axis.text  = element_blank(),
-    axis.ticks = element_blank(),
-    axis.line  = element_blank()
+    axis.title.x  = element_blank(),
+    axis.text.x   = element_blank(),
+    axis.ticks  = element_blank(),
+    axis.line   = element_blank(),
+    legend.title = element_blank(),
+    legend.position = "none",
+    strip.text = element_text(size = 8)
   ) +
-  theme(legend.position = "none") +
+  scale_y_continuous(expand = c(0, 0)) +   # ← THIS removes the white gap
   scale_fill_manual(
     values = c(
-      "Between species" = "#A7CCB8",
-      "Phenology within species" = "#93C9CD",
-      "Treatments within species" = "#E7D67F",
-      "Unexplained individual level variation" = "#D8889B"))+
-  facet_wrap(~ Species)
+      "Time_point" = "#93C9CD",
+      "Treatment"  = "#E7D67F",
+      "Residual"   = "#D8889B"
+    )
+  )+
+  ylab("Variance explained %")
 p3
 
+ggsave("figures/BES_poster_Lucy/Species_level_var_decomp_ordered_treatment.pdf", p3, height = 2.5, width = 5)
 
 ################################################################################
-# 
+# plot individual species models: ordered by magnitude of variance in phenology
+################################################################################
+
+all_sp <- read_csv("results/var_com_ind_species.csv")
+names(all_sp)
+# get rid of SR for now as it si only foudn in one treatment
+all_sp <- all_sp %>% filter(!Species == "SR") %>% filter(Trait_name == "LMA")
+
+# Get species levels ordered by Treatment prop
+species_levels <- all_sp %>%
+  filter(grp == "Time_point") %>%          # only Treatment rows
+  group_by(Species) %>%
+  summarise(order_val = mean(prop, na.rm = TRUE), .groups = "drop") %>%
+  arrange(desc(order_val)) %>%            # largest Treatment prop first
+  pull(Species)
+
+
+# Apply those levels to Species in the full dataset
+all_sp <- all_sp %>%
+  mutate(
+    grp = factor(grp, levels = c("Time_point", "Treatment", "Residual")),
+    Species = factor(Species, levels = species_levels))
+
+unique(all_sp$grp)
+
+
+p4 <- ggplot(all_sp, aes(x = Trait_name, y = prop, fill = grp)) +
+  geom_col(width = 1) +
+  facet_wrap(~Species, nrow = 1) +
+  theme_classic() +
+  theme(
+    axis.title.x  = element_blank(),
+    axis.text.x   = element_blank(),
+    axis.ticks  = element_blank(),
+    axis.line   = element_blank(),
+    legend.title = element_blank(),
+    legend.position = "none",
+    strip.text = element_text(size = 8)
+  ) +
+  scale_y_continuous(expand = c(0, 0)) +   # ← THIS removes the white gap
+  scale_fill_manual(
+    values = c(
+      "Time_point" = "#93C9CD",
+      "Treatment"  = "#E7D67F",
+      "Residual"   = "#D8889B"
+    )
+  )+
+  ylab("Variance explained %")
+p4
+
+ggsave("figures/BES_poster_Lucy/Species_level_var_decomp_ordered_time.pdf", p4, height = 2.5, width = 5)
+
+################################################################################
+# some colour palettes
 ################################################################################
 
 
